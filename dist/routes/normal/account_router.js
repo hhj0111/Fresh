@@ -13,20 +13,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const koa_router_1 = __importDefault(require("koa-router"));
-const accountDao_1 = __importDefault(require("../../dao/accountDao"));
-const tokenUtil_1 = __importDefault(require("../../util/tokenUtil"));
-const emailUtil_1 = __importDefault(require("../../util/emailUtil"));
+const token_1 = __importDefault(require("../../util/token"));
+const email_1 = __importDefault(require("../../util/email"));
+const knex_1 = __importDefault(require("../../util/knex"));
 // import redis from '../../util/redis'
 const router = new koa_router_1.default();
-const account = new accountDao_1.default();
-const emailUtil = new emailUtil_1.default();
+const emailUtil = new email_1.default();
+const knex = knex_1.default.getKnex();
 // 登录
 router.post('/doLogin', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
-    let params = ctx.request.body;
-    if (!params.password || !params.username) {
+    let username = ctx.request.body.username;
+    let password = ctx.request.body.password;
+    if (!password || !username) {
         return ctx.body = { status: 5, msg: '参数不合法' };
     }
-    let data = yield account.normalLogin(params);
+    let data = yield knex('account')
+        .select('id', 'username', 'static')
+        .where({ username, password })
+        .first();
     if (!data)
         return ctx.body = { status: 4, msg: '账户或密码有误' };
     if (data.static === 0)
@@ -37,18 +41,19 @@ router.post('/doLogin', (ctx) => __awaiter(void 0, void 0, void 0, function* () 
         return ctx.body = { status: 3, msg: '账户已不存在,请重新注册' };
     if (data.static === 1) {
         delete data.static;
-        let token = tokenUtil_1.default.sign(data);
+        // 登录成功，将id保存到redis
+        let token = token_1.default.sign({ userid: data.id });
         // let flag = redis.setToken({ 'userId': data.id, 'token': token })
         // console.log(flag) 
         // delete data.id
-        return ctx.body = { status: 1, token: token, username: data.username, msg: '登陆成功' };
+        return ctx.body = { status: 1, data: { token: token, username: data.username }, msg: '登陆成功' };
     }
 }));
 // 验证用户名是否存在
 router.get('/checkUsername', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
     let username = ctx.query.username;
     console.log(username);
-    let data = yield account.checkUsername(username);
+    let data = yield knex('account').count('id').where({ username });
     if (data[0].count > 0) {
         return ctx.body = { status: 0, msg: '该用户名已存在' };
     }
@@ -57,7 +62,7 @@ router.get('/checkUsername', (ctx) => __awaiter(void 0, void 0, void 0, function
 // 验证邮箱是否存在
 router.get('/checkEmail', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
     let email = ctx.query.email;
-    let data = yield account.checkEmail(email);
+    let data = yield knex('account').count('id').where({ email });
     if (data[0].count > 0) {
         return ctx.body = { status: 0, msg: '该邮箱已被注册' };
     }
@@ -72,7 +77,7 @@ router.post('/doRegister', (ctx) => __awaiter(void 0, void 0, void 0, function* 
     if (username.length < 3 || password.length < 5) {
         return ctx.body = { static: 2, msg: '请正确填写信息' };
     }
-    let data = yield account.register(ctx.request.body);
+    let data = yield knex('account').insert({ username, password, email, static: '0' }, 'id');
     // 如果注册成功则发送邮件
     if (data[0] > 0) {
         // 发送邮件
@@ -85,21 +90,12 @@ router.post('/doRegister', (ctx) => __awaiter(void 0, void 0, void 0, function* 
 }));
 // 激活邮箱
 router.get('/activeEmail', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
-    let data = yield account.activeEmail(ctx.query);
+    let id = ctx.query.id;
+    let email = ctx.query.email;
+    let data = yield knex('account').update('static', 1, 'id').where({ id, email });
     if (data[0] > 0) {
         console.log('激活成功');
         ctx.redirect('http://localhost:3001/login');
     }
-}));
-// 退出登录
-router.get('/logout', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
-    let userId = ctx.query.id;
-    // await redis.deleteToken(userId)
-    ctx.body = { status: 1, msg: '已退出登录' };
-}));
-// 测试redis
-router.get('/getToken', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
-    // let token = await redis.getToken(2)
-    // ctx.body = token
 }));
 exports.default = router.routes();

@@ -14,7 +14,7 @@ const config_pg = {
     debug: true, //指明是否开启debug模式，默认为true表示开启
     pool: { //指明数据库连接池的大小，默认为{min: 2, max: 10}
         min: 0,
-        max: 7,
+        max: 10,
     },
     acquireConnectionTimeout: 10000, //指明连接计时器大小，默认为60000ms  
     migrations: {
@@ -46,7 +46,7 @@ const config_token = {
     // token秘钥
     privateKey: 'fresh_token',
     // 过期时间 秒
-    time: 60*60*2,
+    time: 60*60*6,
 }
 
 // 配置redis

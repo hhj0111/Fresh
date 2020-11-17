@@ -18,7 +18,7 @@ const config_pg = {
     debug: true,
     pool: {
         min: 0,
-        max: 7,
+        max: 10,
     },
     acquireConnectionTimeout: 10000,
     migrations: {
@@ -50,7 +50,7 @@ const config_token = {
     // token秘钥
     privateKey: 'fresh_token',
     // 过期时间 秒
-    time: 60 * 60 * 2,
+    time: 60 * 60 * 6,
 };
 exports.config_token = config_token;
 // 配置redis

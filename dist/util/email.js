@@ -10,7 +10,7 @@ class EmailUtil {
         this.transporter = nodemailer_1.default.createTransport(config_1.config_email);
         this.mail = {
             from: config_1.config_email.auth.user,
-            subject: '测试',
+            subject: '激活邮箱',
             to: '',
             text: ''
         };

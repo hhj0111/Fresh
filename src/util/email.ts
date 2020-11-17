@@ -6,9 +6,9 @@ export default class EmailUtil {
     private transporter = nodemailer.createTransport(config_email)
     private mail = {
         from: config_email.auth.user,
-        subject: '测试',
+        subject: '激活邮箱',
         to: '',
-        text: ''
+        text: '' 
     }
     // 发送邮件
     public sendEmail(params) {

@@ -34,33 +34,23 @@ class RedisUtil {
             console.log('redis connect success!');
         });
     }
-    // 保存token
-    static setToken({ userId, token }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let result = yield client.set(`permission_userId_${userId}`, token, redis_1.default.print);
-            client.expire(`permission_userId_${userId}`, 60 * 60 * 2);
-            return result;
-        });
+    setData(key, data) {
+        client.set(key, JSON.stringify(data));
+        // 随机生成3000-6000的数字，充当随机过期时间秒数
+        let randomTime = Math.ceil((Math.random() * 3 + 3) * 1000);
+        client.expire(key, randomTime);
     }
-    // 获取token 
-    static getToken(userId) {
+    getData(key) {
         return __awaiter(this, void 0, void 0, function* () {
-            let res = yield new Promise((resolve, reject) => {
-                client.get(`permission_userId_${userId}`, (err, res) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        resolve(res);
-                    }
+            let data = yield new Promise((resolve, reject) => {
+                client.get(key, (err, val) => {
+                    if (err)
+                        return console.log("redis error:" + err);
+                    resolve(val ? JSON.parse(val) : val);
                 });
             });
-            return res;
+            return data;
         });
-    }
-    // 删除token
-    static deleteToken(userId) {
-        client.del(`permission_userId_${userId}`);
     }
 }
 exports.default = RedisUtil;

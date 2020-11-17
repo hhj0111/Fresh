@@ -41,8 +41,8 @@ export default class ConfigKoa {
         this.app.use((ctx, next) => {
             return next().catch(err => {
                 if (err.status === 401) {
-                    ctx.status = 401
-                    ctx.body = { status: 0, msg: '当前没有操作权限，请登录' }
+                    // ctx.status = 401
+                    ctx.body = { status: 401, msg: '当前没有操作权限，请登录' }
                 } else {
                     throw err;
                 }

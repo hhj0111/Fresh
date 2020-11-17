@@ -26,31 +26,20 @@ export default class RedisUtil {
         })
     }
 
-    // 保存token
-    public static async setToken({ userId, token }) {
-        let result = await client.set(`permission_userId_${userId}`, token, redis.print)
-        client.expire(`permission_userId_${userId}`,60*60*2)
-        return result
+    public setData(key,data){
+        client.set(key,JSON.stringify(data))
+        // 随机生成3000-6000的数字，充当随机过期时间秒数
+        let randomTime = Math.ceil((Math.random()*3+3)*1000)
+        client.expire(key,randomTime)
     }
 
-    // 获取token 
-    public static async getToken(userId) {
-        
-        let res = await new Promise((resolve,reject)=>{
-            client.get(`permission_userId_${userId}`,(err,res)=>{
-                if(err){
-                    reject(err)
-                }else{
-                    resolve(res)
-                }
+    public async getData(key){
+        let data = await new Promise((resolve,reject)=>{
+            client.get(key,(err,val)=>{
+                if(err) return console.log("redis error:"+err)
+                resolve(val?JSON.parse(val):val)
             })
         })
-        return res             
+        return data;
     }
-
-    // 删除token
-    public static deleteToken (userId){
-        client.del(`permission_userId_${userId}`)
-    }
-
 }

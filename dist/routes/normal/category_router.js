@@ -12,19 +12,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const categoryDao_1 = __importDefault(require("../../dao/categoryDao"));
 const koa_router_1 = __importDefault(require("koa-router"));
+const knex_1 = __importDefault(require("../../util/knex"));
 const router = new koa_router_1.default();
-const category = new categoryDao_1.default();
+const knex = knex_1.default.getKnex();
 router.get('/getCategory', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
-    let data = yield category.findAll();
+    let data = yield knex('category').select('*');
     if (data) {
         return ctx.body = { status: 1, data: data, msg: '查询成功' };
     }
     ctx.body = { status: 0, msg: '查询失败' };
 }));
 router.get('/findNameById', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
-    let data = yield category.findNameById(ctx.query.id);
+    let id = ctx.query.id;
+    let data = yield knex('category').select('categoryname').where({ id }).first();
     if (data) {
         return ctx.body = { status: 1, data: data, msg: '查询成功' };
     }

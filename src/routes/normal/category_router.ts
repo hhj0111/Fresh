@@ -1,12 +1,11 @@
-import CategoryDao from '../../dao/categoryDao'
 import Router from 'koa-router'
+import Knex from '../../util/knex'
 
 const router = new Router()
-
-const category = new CategoryDao()
+const knex = Knex.getKnex()
 
 router.get('/getCategory', async ctx => {
-    let data = await category.findAll()
+    let data = await knex('category').select('*')
     if (data) {
         return ctx.body = { status: 1, data: data, msg: '查询成功' } 
     }
@@ -14,7 +13,8 @@ router.get('/getCategory', async ctx => {
 })
 
 router.get('/findNameById', async ctx => {
-    let data = await category.findNameById(ctx.query.id)
+    let id = ctx.query.id
+    let data = await knex('category').select('categoryname').where({id}).first()
     if (data) {
         return ctx.body = { status: 1, data: data, msg: '查询成功' }
     }
